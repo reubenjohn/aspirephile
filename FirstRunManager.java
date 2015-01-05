@@ -29,14 +29,37 @@ public class FirstRunManager {
 
 	private String booleanKey;
 	private String sharedPrefsName;
-	private Class<?> firstRunClass;
-	private Class<?> notFirstRunClass;
+
+	private class RunConfig {
+		public Class<?> launchActivity;
+		public int enterAnim;
+		public int exitAnim;
+
+		public RunConfig() {
+			launchActivity = null;
+			enterAnim = 0;
+			exitAnim = 0;
+		}
+
+		public boolean isLaunchConfigurationValid() {
+			return ((launchActivity != null));
+		}
+
+		public boolean isAnimationConfigurationValid() {
+			return (enterAnim > 0) && (exitAnim > 0);
+		}
+	}
+
+	RunConfig firstRunConfigs, subsequentRunConfigs;
+
 	SharedPreferences prefs;
 
 	public FirstRunManager(FragmentActivity activity) {
 		this.activity = activity;
 		prefs = this.activity.getSharedPreferences(sharedPrefsName,
 				Context.MODE_PRIVATE);
+		firstRunConfigs = new RunConfig();
+		subsequentRunConfigs = new RunConfig();
 	}
 
 	public boolean isFirstRun() {
@@ -44,13 +67,26 @@ public class FirstRunManager {
 	}
 
 	public FirstRunManager setOnFirstRunClass(Class<?> cls) {
-		this.firstRunClass = cls;
+		firstRunConfigs.launchActivity = cls;
 		return this;
 	}
 
-	public FirstRunManager setOnNotFirstRunClass(Class<?> cls) {
-		this.notFirstRunClass = cls;
+	public FirstRunManager setOnSubsequentRunClass(Class<?> cls) {
+		subsequentRunConfigs.launchActivity = cls;
 		return this;
+	}
+
+	public FirstRunManager setFirstRunTransition(int enterAnim, int exitAnim) {
+		firstRunConfigs.enterAnim = enterAnim;
+		firstRunConfigs.exitAnim = exitAnim;
+		return FirstRunManager.this;
+	}
+
+	public FirstRunManager setSubsequentRunTransition(int enterAnim,
+			int exitAnim) {
+		subsequentRunConfigs.enterAnim = enterAnim;
+		subsequentRunConfigs.exitAnim = exitAnim;
+		return FirstRunManager.this;
 	}
 
 	public FirstRunManager setSharedPrefsName(String sharedPrefsName) {
@@ -64,21 +100,35 @@ public class FirstRunManager {
 	}
 
 	public FirstRunManager launchNextActivity() {
-		Class<?> cls;
+		RunConfig runConfigs;
 		boolean isFirstRun = isFirstRun();
+		// Setup appropriate launch configurations
 		if (isFirstRun) {
 			l.i("Initiating first run protocol");
-			cls = firstRunClass;
+			runConfigs = firstRunConfigs;
 		} else {
 
 			l.i("Previous run detected. Skipping first run protocol");
-			cls = notFirstRunClass;
+			runConfigs = subsequentRunConfigs;
 		}
-		Intent i = new Intent(activity, cls);
-		l.d(activity + " launching next activity: " + cls + "(" + i + ")");
-		activity.startActivityForResult(i, EventBookerProps.codes.welcome);
-		if (!isFirstRun)
+		// Validate and start activity
+		if (runConfigs.isLaunchConfigurationValid()) {
+			Intent i = new Intent(activity, runConfigs.launchActivity);
+			l.d(activity + " launching next activity: "
+					+ runConfigs.launchActivity + "(" + i + ")");
+			activity.startActivityForResult(i, EventBookerProps.codes.welcome);
+		}
+		// Validate and override pending transition
+		if (runConfigs.isAnimationConfigurationValid()) {
+			activity.overridePendingTransition(runConfigs.enterAnim,
+					runConfigs.exitAnim);
+		}
+
+		// Lastly finish root activity to prevent return to it on back button
+		// press from the subsequent activity
+		if (!isFirstRun) {
 			activity.finish();
+		}
 		return this;
 	}
 
