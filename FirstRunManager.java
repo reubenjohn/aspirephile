@@ -27,8 +27,6 @@ public class FirstRunManager {
 
 	private Activity activity;
 
-	private boolean isFirstRun;
-	private boolean firstRunChecked = false;
 	private String booleanKey;
 	private String sharedPrefsName;
 	private Class<?> firstRunClass;
@@ -42,11 +40,7 @@ public class FirstRunManager {
 	}
 
 	public boolean isFirstRun() {
-		if (!firstRunChecked) {
-			isFirstRun = prefs.getBoolean(booleanKey, defaults.isfirstRun);
-			firstRunChecked = true;
-		}
-		return isFirstRun;
+		return prefs.getBoolean(booleanKey, defaults.isfirstRun);
 	}
 
 	public FirstRunManager setOnFirstRunClass(Class<?> cls) {
@@ -71,7 +65,8 @@ public class FirstRunManager {
 
 	public FirstRunManager launchNextActivity() {
 		Class<?> cls;
-		if (isFirstRun()) {
+		boolean isFirstRun = isFirstRun();
+		if (isFirstRun) {
 			l.i("Initiating first run protocol");
 			cls = firstRunClass;
 		} else {
@@ -82,6 +77,8 @@ public class FirstRunManager {
 		Intent i = new Intent(activity, cls);
 		l.d(activity + " launching next activity: " + cls + "(" + i + ")");
 		activity.startActivityForResult(i, EventBookerProps.codes.welcome);
+		if (!isFirstRun)
+			activity.finish();
 		return this;
 	}
 
@@ -98,6 +95,7 @@ public class FirstRunManager {
 			l.d("Marking indicator of successful first run");
 			prefs.edit().putBoolean(booleanKey, !isFirstRunSuccessful).commit();
 		}
+		launchNextActivity();
 	}
 
 }
