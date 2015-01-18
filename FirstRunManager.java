@@ -5,12 +5,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 
 import com.aspirephile.shared.debug.Logger;
 
 public class FirstRunManager {
 	Logger l = new Logger(FirstRunManager.class);
+
+	private enum ContextMode {
+		ACTIVITY, FRAGMENT
+	}
+
+	ContextMode contextMode;
 
 	public static class defaults {
 		public static final boolean isfirstRun = true;
@@ -25,6 +32,9 @@ public class FirstRunManager {
 	};
 
 	private Activity activity;
+
+	// private Activity activity;
+	private Fragment fragment;
 
 	private String booleanKey;
 	private String sharedPrefsName;
@@ -59,6 +69,7 @@ public class FirstRunManager {
 			this.requestCode = requestCode;
 			return RunConfig.this;
 		}
+
 		public RunConfig setTransitions(int enterAnim, int exitAnim) {
 			this.enterAnim = enterAnim;
 			this.exitAnim = exitAnim;
@@ -83,7 +94,6 @@ public class FirstRunManager {
 					+ "Exit: " + exitAnim + " } }";
 		}
 
-
 	}
 
 	public RunConfig firstRunConfig, subsequentRunConfig;
@@ -92,8 +102,24 @@ public class FirstRunManager {
 
 	public FirstRunManager(FragmentActivity activity) {
 		this.activity = activity;
-		prefs = this.activity.getSharedPreferences(sharedPrefsName,
-				Context.MODE_PRIVATE);
+		initializeFeilds(ContextMode.ACTIVITY);
+	}
+
+	public FirstRunManager(Fragment fragment) {
+		this.fragment = fragment;
+		initializeFeilds(ContextMode.FRAGMENT);
+	}
+
+	private void initializeFeilds(ContextMode contextMode) {
+		this.contextMode = contextMode;
+		if (contextMode == ContextMode.ACTIVITY) {
+			prefs = this.activity.getSharedPreferences(sharedPrefsName,
+					Context.MODE_PRIVATE);
+		} else if (contextMode == ContextMode.FRAGMENT) {
+			prefs = this.fragment.getActivity().getSharedPreferences(
+					sharedPrefsName, Context.MODE_PRIVATE);
+			this.activity = fragment.getActivity();
+		}
 		firstRunConfig = new RunConfig();
 		subsequentRunConfig = new RunConfig();
 	}
@@ -129,7 +155,12 @@ public class FirstRunManager {
 			Intent i = new Intent(activity, runConfig.launchActivity);
 			l.d(activity + " launching next activity: "
 					+ runConfig.launchActivity + "(" + i + ")");
-			activity.startActivityForResult(i, runConfig.requestCode);
+			if (contextMode == ContextMode.ACTIVITY) {
+				activity.startActivityForResult(i, runConfig.requestCode);
+			} else if (contextMode == ContextMode.FRAGMENT) {
+				fragment.startActivityForResult(i, runConfig.requestCode);
+			}
+
 		} else {
 			l.e("Invalid run configurations: " + runConfig);
 			// Validate and override pending transition
