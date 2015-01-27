@@ -102,15 +102,15 @@ public class FirstRunManager {
 
 	public FirstRunManager(FragmentActivity activity) {
 		this.activity = activity;
-		initializeFeilds(ContextMode.ACTIVITY);
+		initializeFields(ContextMode.ACTIVITY);
 	}
 
 	public FirstRunManager(Fragment fragment) {
 		this.fragment = fragment;
-		initializeFeilds(ContextMode.FRAGMENT);
+		initializeFields(ContextMode.FRAGMENT);
 	}
 
-	private void initializeFeilds(ContextMode contextMode) {
+	private void initializeFields(ContextMode contextMode) {
 		this.contextMode = contextMode;
 		if (contextMode == ContextMode.ACTIVITY) {
 			prefs = this.activity.getSharedPreferences(sharedPrefsName,
