@@ -1,7 +1,5 @@
 package com.aspirephile.shared.debug;
 
-import android.util.Log;
-
 public class NullPointerAsserter {
 
     Logger l;
