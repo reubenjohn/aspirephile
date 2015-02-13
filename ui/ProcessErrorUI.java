@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.aspirephile.shared.debug.Logger;
@@ -23,9 +24,18 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
     TextView error;
     Button retry;
 
-    boolean isErrorSet, isAnimationEnabled;
+    private enum ProcessState {
+        LOADING, ERROR_SET, RESOLVED
+    }
+
+    ProcessState state;
+    boolean isAnimationEnabled;
+
     private OnClickListener onClickListener;
-    private View view;
+    private View processErrorUICOntainer;
+    private ProgressBar progressBar;
+
+    private View parentContentView;
 
     public ProcessErrorUI() {
         l.onConstructor();
@@ -49,35 +59,48 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
         return v;
     }
 
-    private void initializeFields() {
-        l.initializeFields();
-        isErrorSet = false;
-        isAnimationEnabled = true;
-        retry.setOnClickListener(this);
-        if (isAdded()) {
-            internalHide(false, true);
-        }
-    }
-
     private void bridgeXML(View v) {
         l.bridgeXML();
         error = (TextView) v.findViewById(R.id.tv_process_error_ui);
         retry = (Button) v.findViewById(R.id.b_process_error_ui_retry);
-        if (asserter.assertPointer(error, retry))
-            l.d("Bridging successful");
+        progressBar = (ProgressBar) v.findViewById(R.id.pb_process_error);
+        processErrorUICOntainer = v.findViewById(R.id.container_process_error_ui);
+        l.bridgeXML(asserter.assertPointer(error, retry, progressBar, processErrorUICOntainer));
+    }
+
+    private void initializeFields() {
+        l.initializeFields();
+        isAnimationEnabled = true;
+        retry.setOnClickListener(this);
+        showLoading();
     }
 
     @Override
     public void onResume() {
         l.onResume();
         super.onResume();
-        if (!isErrorSet) {
-            hide(false);
+        switch (state) {
+            case ERROR_SET:
+                show();
+                break;
+            case LOADING:
+                showLoading();
+                processErrorUICOntainer.setVisibility(View.GONE);
+                break;
+            case RESOLVED:
+                resolveErrors();
+                break;
+            default:
+                l.e("Unknown Process UI state");
         }
     }
 
-    public void setParentView(View view) {
-        this.view = view;
+    public void setAnimationsEnabled(boolean isAnimationEnabled) {
+        this.isAnimationEnabled = isAnimationEnabled;
+    }
+
+    public void setParentContentView(View view) {
+        this.parentContentView = view;
     }
 
     public void setError(String error) {
@@ -91,17 +114,32 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
     }
 
     private void internalSetError() {
-        isErrorSet = true;
-        show();
+        l.d("Setting errors");
+        state = ProcessState.ERROR_SET;
+        if (asserter.assertPointer(progressBar)) {
+            show();
+            progressBar.setVisibility(View.GONE);
+            processErrorUICOntainer.setVisibility(View.VISIBLE);
+        }
     }
 
-    public void setAnimationsEnabled(boolean isAnimationEnabled) {
-        this.isAnimationEnabled = isAnimationEnabled;
+    public void showLoading() {
+        l.d("Showing loading");
+        state = ProcessState.LOADING;
+        if (asserter.assertPointerQuietly(progressBar)) {
+            show();
+            progressBar.setVisibility(View.VISIBLE);
+            processErrorUICOntainer.setVisibility(View.GONE);
+        }
     }
 
     public void resolveErrors() {
-        isErrorSet = false;
-        hide();
+        l.d("Resolving errors");
+        state = ProcessState.RESOLVED;
+        if (asserter.assertPointer(progressBar)) {
+            progressBar.setVisibility(View.GONE);
+            hide();
+        }
     }
 
     private void show() {
@@ -114,13 +152,13 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
 
     private void internalShow(boolean animate) {
         if (!isVisible()) {
-            l.d("Showing error");
+            l.d("Showing fragment");
             FragmentTransaction manager = getFragmentManager().beginTransaction();
             if (isAnimationEnabled) {
                 manager.setCustomAnimations(android.R.anim.fade_in, android.R.anim.slide_out_right);
             }
-            if (view != null)
-                view.setVisibility(View.GONE);
+            if (parentContentView != null)
+                parentContentView.setVisibility(View.GONE);
             manager.show(this).commit();
         }
     }
@@ -135,13 +173,13 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
 
     private void internalHide(boolean animate, boolean force) {
         if (isVisible() || force) {
-            l.d("Hiding error");
+            l.d("Hiding fragment");
             FragmentTransaction manager = getFragmentManager().beginTransaction();
             if (animate) {
                 manager.setCustomAnimations(android.R.anim.fade_in, android.R.anim.slide_out_right);
             }
-            if (view != null)
-                view.setVisibility(View.VISIBLE);
+            if (parentContentView != null)
+                parentContentView.setVisibility(View.VISIBLE);
             manager.hide(this).commit();
         }
     }

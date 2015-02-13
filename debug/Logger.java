@@ -56,7 +56,7 @@ public class Logger {
     }
 
     public void onCreateView() {
-        Log.d(tag, cls.getSimpleName() + ": onCreate");
+        Log.d(tag, cls.getSimpleName() + ": onCreateView");
     }
 
     public void onDestroy() {
@@ -94,11 +94,11 @@ public class Logger {
     }
 
     public void initializeFields() {
-        Log.d(tag, cls.getSimpleName() + ": onCreateOptionsMenu");
+        Log.d(tag, cls.getSimpleName() + ": initializeFields");
     }
 
     public void bridgeXML() {
-        Log.d(tag, cls.getSimpleName() + ": initializeFields");
+        Log.d(tag, cls.getSimpleName() + ": bridgeXML");
     }
 
     public void bridgeXML(boolean success) {

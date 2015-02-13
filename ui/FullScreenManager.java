@@ -1,4 +1,4 @@
-package com.aspirephile.shared;
+package com.aspirephile.shared.ui;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
