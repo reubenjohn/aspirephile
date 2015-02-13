@@ -14,7 +14,9 @@ import com.aspirephile.shared.debug.Logger;
 import com.aspirephile.shared.debug.NullPointerAsserter;
 import com.funtainment.R;
 
-public class ProcessErrorUI extends Fragment {
+import static android.view.View.OnClickListener;
+
+public class ProcessErrorUI extends Fragment implements OnClickListener {
     private final Logger l = new Logger(ProcessErrorUI.class);
     private final NullPointerAsserter asserter = new NullPointerAsserter(l);
 
@@ -22,9 +24,11 @@ public class ProcessErrorUI extends Fragment {
     Button retry;
 
     boolean isErrorSet, isAnimationEnabled;
+    private OnClickListener onClickListener;
+    private View view;
 
     public ProcessErrorUI() {
-        l.d("Instantiating fragment");
+        l.onConstructor();
     }
 
     @Override
@@ -49,6 +53,7 @@ public class ProcessErrorUI extends Fragment {
         l.initializeFields();
         isErrorSet = false;
         isAnimationEnabled = true;
+        retry.setOnClickListener(this);
         if (isAdded()) {
             internalHide(false, true);
         }
@@ -71,6 +76,10 @@ public class ProcessErrorUI extends Fragment {
         }
     }
 
+    public void setParentView(View view) {
+        this.view = view;
+    }
+
     public void setError(String error) {
         this.error.setText(error);
         internalSetError();
@@ -86,11 +95,9 @@ public class ProcessErrorUI extends Fragment {
         show();
     }
 
-
     public void setAnimationsEnabled(boolean isAnimationEnabled) {
         this.isAnimationEnabled = isAnimationEnabled;
     }
-
 
     public void resolveErrors() {
         isErrorSet = false;
@@ -98,23 +105,22 @@ public class ProcessErrorUI extends Fragment {
     }
 
     private void show() {
+        internalShow(isAnimationEnabled);
+    }
+
+    private void show(boolean animate) {
+        internalShow(animate);
+    }
+
+    private void internalShow(boolean animate) {
         if (!isVisible()) {
             l.d("Showing error");
             FragmentTransaction manager = getFragmentManager().beginTransaction();
             if (isAnimationEnabled) {
                 manager.setCustomAnimations(android.R.anim.fade_in, android.R.anim.slide_out_right);
             }
-            manager.show(this).commit();
-        }
-    }
-
-    private void show(boolean animate) {
-        if (!isVisible()) {
-            l.d("Showing error");
-            FragmentTransaction manager = getFragmentManager().beginTransaction();
-            if (animate) {
-                manager.setCustomAnimations(android.R.anim.fade_in, android.R.anim.slide_out_right);
-            }
+            if (view != null)
+                view.setVisibility(View.GONE);
             manager.show(this).commit();
         }
     }
@@ -134,13 +140,19 @@ public class ProcessErrorUI extends Fragment {
             if (animate) {
                 manager.setCustomAnimations(android.R.anim.fade_in, android.R.anim.slide_out_right);
             }
+            if (view != null)
+                view.setVisibility(View.VISIBLE);
             manager.hide(this).commit();
         }
     }
 
+    public void setOnClickListener(OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
 
-    public void setOnClickListener(View.OnClickListener l) {
-        if (asserter.assertPointer(retry))
-            retry.setOnClickListener(l);
+    @Override
+    public void onClick(View v) {
+        if (asserter.assertPointer(onClickListener))
+            onClickListener.onClick(v);
     }
 }

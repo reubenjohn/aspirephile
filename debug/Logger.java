@@ -1,5 +1,6 @@
 package com.aspirephile.shared.debug;
 
+import android.content.Intent;
 import android.util.Log;
 
 public class Logger {
@@ -82,8 +83,10 @@ public class Logger {
         Log.d(tag, cls.getSimpleName() + ": onStop");
     }
 
-    public void onActivityResult() {
-        Log.d(tag, cls.getSimpleName() + ": onActivityResult");
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
+                + ", result code: " + resultCode
+                + ", data: " + data);
     }
 
     public void onCreateOptionsMenu() {
