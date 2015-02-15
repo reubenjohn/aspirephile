@@ -22,6 +22,8 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
     private final NullPointerAsserter asserter = new NullPointerAsserter(l);
 
     TextView error;
+    String errorText;
+
     Button retry;
 
     private enum ProcessState {
@@ -72,7 +74,6 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
         l.initializeFields();
         isAnimationEnabled = true;
         retry.setOnClickListener(this);
-        showLoading();
     }
 
     @Override
@@ -81,7 +82,7 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
         super.onResume();
         switch (state) {
             case ERROR_SET:
-                show();
+                setError(errorText);
                 break;
             case LOADING:
                 showLoading();
@@ -104,42 +105,45 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
     }
 
     public void setError(String error) {
-        this.error.setText(error);
-        internalSetError();
-    }
-
-    public void setError(int stringId) {
-        this.error.setText(stringId);
+        if (asserter.assertPointerQuietly(this.error)) {
+            this.error.setText(error);
+        } else {
+            errorText = error;
+        }
         internalSetError();
     }
 
     private void internalSetError() {
         l.d("Setting errors");
         state = ProcessState.ERROR_SET;
-        if (asserter.assertPointer(progressBar)) {
-            show();
+        if (asserter.assertPointerQuietly(progressBar, processErrorUICOntainer)) {
             progressBar.setVisibility(View.GONE);
             processErrorUICOntainer.setVisibility(View.VISIBLE);
         }
+        if (parentContentView != null)
+            parentContentView.setVisibility(View.INVISIBLE);
     }
 
     public void showLoading() {
         l.d("Showing loading");
         state = ProcessState.LOADING;
-        if (asserter.assertPointerQuietly(progressBar)) {
-            show();
+        if (asserter.assertPointerQuietly(progressBar, processErrorUICOntainer)) {
             progressBar.setVisibility(View.VISIBLE);
             processErrorUICOntainer.setVisibility(View.GONE);
         }
+        if (parentContentView != null)
+            parentContentView.setVisibility(View.INVISIBLE);
     }
 
     public void resolveErrors() {
         l.d("Resolving errors");
         state = ProcessState.RESOLVED;
-        if (asserter.assertPointer(progressBar)) {
+        if (asserter.assertPointer(progressBar, processErrorUICOntainer)) {
             progressBar.setVisibility(View.GONE);
-            hide();
+            processErrorUICOntainer.setVisibility(View.GONE);
         }
+        if (parentContentView != null)
+            parentContentView.setVisibility(View.VISIBLE);
     }
 
     private void show() {
@@ -159,7 +163,8 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
             }
             if (parentContentView != null)
                 parentContentView.setVisibility(View.GONE);
-            manager.show(this).commit();
+            if (asserter.assertPointerQuietly(manager))
+                manager.show(this).commit();
         }
     }
 
@@ -180,7 +185,8 @@ public class ProcessErrorUI extends Fragment implements OnClickListener {
             }
             if (parentContentView != null)
                 parentContentView.setVisibility(View.VISIBLE);
-            manager.hide(this).commit();
+            if (asserter.assertPointerQuietly(manager))
+                manager.hide(this).commit();
         }
     }
 
