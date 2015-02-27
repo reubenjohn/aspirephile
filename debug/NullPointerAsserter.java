@@ -1,5 +1,6 @@
 package com.aspirephile.shared.debug;
 
+@SuppressWarnings("UnusedDeclaration")
 public class NullPointerAsserter {
 
     Logger l;
@@ -44,8 +45,8 @@ public class NullPointerAsserter {
 
     public boolean assertPointerQuietly(Object... objects) {
         if (objects != null) {
-            for (int i = 0; i < objects.length; i++) {
-                if (objects[i] == null) {
+            for (Object object : objects) {
+                if (object == null) {
                     return false;
                 }
             }

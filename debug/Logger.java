@@ -3,6 +3,7 @@ package com.aspirephile.shared.debug;
 import android.content.Intent;
 import android.util.Log;
 
+@SuppressWarnings("UnusedDeclaration")
 public class Logger {
 
     String tag;
