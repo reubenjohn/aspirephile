@@ -61,7 +61,11 @@ public class Logger {
     }
 
     public void onDestroy() {
-        Log.d(tag, cls.getSimpleName() + ": onDestroy");
+        Log.w(tag, cls.getSimpleName() + ": onDestroy");
+    }
+
+    public void onDestroyView() {
+        Log.w(tag, cls.getSimpleName() + ": onDestroyView");
     }
 
     public void onResume() {
@@ -105,5 +109,4 @@ public class Logger {
     public void bridgeXML(boolean success) {
         Log.d(tag, cls.getSimpleName() + ": bridgeXML -> " + (success ? "success" : "failure"));
     }
-
 }
