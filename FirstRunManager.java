@@ -11,9 +11,15 @@ import android.support.v4.app.FragmentActivity;
 import com.aspirephile.shared.debug.Logger;
 import com.aspirephile.shared.debug.NullPointerAsserter;
 
-public class FirstRunManager {
+public class FirstRunManager implements OnFirstRunSuccessful {
     Logger l = new Logger(FirstRunManager.class);
     private NullPointerAsserter asserter = new NullPointerAsserter(l);
+    private Runnable firstRunnable, subsequentRunnable;
+
+    @Override
+    public void onFirstRunSuccessful(boolean isFirstRunSuccessful) {
+        
+    }
 
     private enum ContextMode {
         ACTIVITY, FRAGMENT
@@ -29,7 +35,7 @@ public class FirstRunManager {
 
         @Override
         public void run() {
-            launchNextActivity();
+            performNextAction();
         }
     };
 
@@ -140,56 +146,67 @@ public class FirstRunManager {
         return this;
     }
 
-    public FirstRunManager launchNextActivity() {
+    public FirstRunManager performNextAction() {
         RunConfig runConfig;
         boolean isFirstRun = isFirstRun();
-        // Setup appropriate launch configurations
-        if (isFirstRun) {
-            l.i("Initiating first run protocol");
-            runConfig = firstRunConfig;
-        } else {
-
-            l.i("Previous run detected. Skipping first run protocol");
-            runConfig = subsequentRunConfig;
-        }
-        // Validate and start activity
-        if (runConfig.isLaunchConfigurationValid()) {
-            Intent i = new Intent(activity, runConfig.launchActivity);
-            l.d(activity + " launching next activity: "
-                    + runConfig.launchActivity + "(" + i + ")");
-            if (contextMode == ContextMode.ACTIVITY) {
-                activity.startActivityForResult(i, runConfig.requestCode);
-            } else if (contextMode == ContextMode.FRAGMENT) {
-                fragment.startActivityForResult(i, runConfig.requestCode);
+        if (asserter.assertPointerQuietly(firstRunnable, subsequentRunConfig)) {
+            if (isFirstRun) {
+                l.i("Initiating first run Runnable");
+                firstRunnable.run();
+            } else {
+                l.i("Initiating subsequent run Runnable");
+                subsequentRunnable.run();
             }
-
+            return this;
         } else {
-            l.e("Invalid run configurations: " + runConfig);
-            // Validate and override pending transition
-            if (runConfig.isAnimationConfigurationValid()) {
-                activity.overridePendingTransition(runConfig.enterAnim,
-                        runConfig.exitAnim);
-            } else
-                l.w("Invalid animation configurations: " + runConfig);
-            // TODO Throw appropriate exceptions describing error (maybe with
-            // launch
-            // configurations)
-        }
-        // TODO Throw appropriate exceptions describing error (maybe with launch
-        // configurations)
+            // Setup appropriate launch configurations
+            if (isFirstRun) {
+                l.i("Initiating first run protocol");
+                runConfig = firstRunConfig;
+            } else {
 
-        // Lastly finish root activity to prevent return to it on back button
-        // press from the subsequent activity
-        if (!isFirstRun) {
-            activity.finish();
+                l.i("Previous run detected. Skipping first run protocol");
+                runConfig = subsequentRunConfig;
+            }
+            // Validate and start activity
+            if (runConfig.isLaunchConfigurationValid()) {
+                Intent i = new Intent(activity, runConfig.launchActivity);
+                l.d(activity + " launching next activity: "
+                        + runConfig.launchActivity + "(" + i + ")");
+                if (contextMode == ContextMode.ACTIVITY) {
+                    activity.startActivityForResult(i, runConfig.requestCode);
+                } else if (contextMode == ContextMode.FRAGMENT) {
+                    fragment.startActivityForResult(i, runConfig.requestCode);
+                }
+
+            } else {
+                l.e("Invalid run configurations: " + runConfig);
+                // Validate and override pending transition
+                if (runConfig.isAnimationConfigurationValid()) {
+                    activity.overridePendingTransition(runConfig.enterAnim,
+                            runConfig.exitAnim);
+                } else
+                    l.w("Invalid animation configurations: " + runConfig);
+                // TODO Throw appropriate exceptions describing error (maybe with
+                // launch
+                // configurations)
+            }
+            // TODO Throw appropriate exceptions describing error (maybe with launch
+            // configurations)
+
+            // Lastly finish root activity to prevent return to it on back button
+            // press from the subsequent activity
+            if (!isFirstRun) {
+                activity.finish();
+            }
+            return this;
         }
-        return this;
     }
 
-    public FirstRunManager scheduleNextActivity(int splashscreenduration) {
-        l.d("Scheduling next activity launch for " + splashscreenduration
-                + "ms delay");
-        new Handler().postDelayed(launchNextActivity, splashscreenduration);
+    public FirstRunManager scheduleAction(int delay) {
+        l.d("Scheduling launch after " + delay
+                + "ms");
+        new Handler().postDelayed(launchNextActivity, delay);
         return this;
     }
 
@@ -197,9 +214,20 @@ public class FirstRunManager {
         l.d("Received message: First run successful: " + isFirstRunSuccessful);
         if (isFirstRunSuccessful) {
             l.d("Marking indicator of successful first run");
-            prefs.edit().putBoolean(booleanKey, !isFirstRunSuccessful).commit();
+        } else {
+            l.d("Marking indicator of failed first run");
         }
-        launchNextActivity();
+        prefs.edit().putBoolean(booleanKey, !isFirstRunSuccessful).apply();
+        performNextAction();
     }
 
+    public FirstRunManager setFirstRunRunnable(Runnable runnable) {
+        this.firstRunnable = runnable;
+        return this;
+    }
+
+    public FirstRunManager setSubsequentRunRunnable(Runnable runnable) {
+        subsequentRunnable = runnable;
+        return this;
+    }
 }
