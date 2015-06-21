@@ -60,6 +60,10 @@ public class Logger {
         Log.d(tag, cls.getSimpleName() + ": onCreateView");
     }
 
+    public void onCreateDialog() {
+        Log.d(tag, cls.getSimpleName() + ": onCreateDialog");
+    }
+
     public void onDestroy() {
         Log.w(tag, cls.getSimpleName() + ": onDestroy");
     }
@@ -109,4 +113,6 @@ public class Logger {
     public void bridgeXML(boolean success) {
         Log.d(tag, cls.getSimpleName() + ": bridgeXML -> " + (success ? "success" : "failure"));
     }
+
+
 }
