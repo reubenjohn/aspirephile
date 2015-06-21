@@ -18,7 +18,7 @@ public class FirstRunManager implements OnFirstRunSuccessful {
 
     @Override
     public void onFirstRunSuccessful(boolean isFirstRunSuccessful) {
-        
+
     }
 
     private enum ContextMode {
@@ -120,14 +120,6 @@ public class FirstRunManager implements OnFirstRunSuccessful {
 
     private void initializeFields(ContextMode contextMode) {
         this.contextMode = contextMode;
-        if (contextMode == ContextMode.ACTIVITY) {
-            prefs = this.activity.getSharedPreferences(sharedPrefsName,
-                    Context.MODE_PRIVATE);
-        } else if (contextMode == ContextMode.FRAGMENT) {
-            prefs = this.fragment.getActivity().getSharedPreferences(
-                    sharedPrefsName, Context.MODE_PRIVATE);
-            this.activity = fragment.getActivity();
-        }
         firstRunConfig = new RunConfig();
         subsequentRunConfig = new RunConfig();
     }
@@ -138,6 +130,15 @@ public class FirstRunManager implements OnFirstRunSuccessful {
 
     public FirstRunManager setSharedPrefsName(String sharedPrefsName) {
         this.sharedPrefsName = sharedPrefsName;
+        asserter.assertPointer(sharedPrefsName);
+        if (contextMode == ContextMode.ACTIVITY) {
+            prefs = this.activity.getSharedPreferences(sharedPrefsName,
+                    Context.MODE_PRIVATE);
+        } else if (contextMode == ContextMode.FRAGMENT) {
+            prefs = this.fragment.getActivity().getSharedPreferences(
+                    sharedPrefsName, Context.MODE_PRIVATE);
+            this.activity = fragment.getActivity();
+        }
         return this;
     }
 
