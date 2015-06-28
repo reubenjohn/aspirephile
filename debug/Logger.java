@@ -114,5 +114,11 @@ public class Logger {
         Log.d(tag, cls.getSimpleName() + ": bridgeXML -> " + (success ? "success" : "failure"));
     }
 
+    public void onRestoreInstanceState() {
+        Log.d(tag, cls.getSimpleName() + ": onRestoreInstanceState");
+    }
 
+    public void onSaveInstanceState() {
+        Log.d(tag, cls.getSimpleName() + ": onSaveInstanceState");
+    }
 }
