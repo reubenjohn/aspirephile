@@ -121,4 +121,12 @@ public class Logger {
     public void onSaveInstanceState() {
         Log.d(tag, cls.getSimpleName() + ": onSaveInstanceState");
     }
+
+    public void onAttach() {
+        Log.d(tag, cls.getSimpleName() + ": onAttach");
+    }
+
+    public void onDetach() {
+        Log.d(tag, cls.getSimpleName() + ": onDetach");
+    }
 }
