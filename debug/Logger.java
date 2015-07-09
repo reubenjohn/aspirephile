@@ -1,5 +1,6 @@
 package com.aspirephile.shared.debug;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 
@@ -30,6 +31,10 @@ public class Logger {
             this.tag = cls.getName();
         } else
             throw new NullPointerException();
+    }
+
+    public void v(String msg) {
+        Log.v(tag, msg);
     }
 
     public void d(String msg) {
@@ -93,9 +98,28 @@ public class Logger {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
-                + ", result code: " + resultCode
-                + ", data: " + data);
+        String result;
+        if (resultCode == Activity.RESULT_OK) {
+            result = "RESULT_OK";
+            Log.i(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
+                    + ", result code: " + result
+                    + ", data: " + data);
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            result = "RESULT_CANCELED";
+            Log.e(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
+                    + ", result code: " + result
+                    + ", data: " + data);
+        } else if (resultCode == Activity.RESULT_FIRST_USER) {
+            result = "RESULT_FIRST_USER";
+            Log.d(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
+                    + ", result code: " + result
+                    + ", data: " + data);
+        } else {
+            result = String.valueOf(resultCode);
+            Log.e(tag, cls.getSimpleName() + ": onActivityResult -> requestCode: " + requestCode
+                    + ", result code: " + result
+                    + ", data: " + data);
+        }
     }
 
     public void onCreateOptionsMenu() {
@@ -129,4 +153,5 @@ public class Logger {
     public void onDetach() {
         Log.d(tag, cls.getSimpleName() + ": onDetach");
     }
+
 }
