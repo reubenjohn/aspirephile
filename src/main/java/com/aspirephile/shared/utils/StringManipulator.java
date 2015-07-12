@@ -2,9 +2,14 @@ package com.aspirephile.shared.utils;
 
 import com.aspirephile.shared.debug.NullPointerAsserter;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringManipulator {
 
 	private NullPointerAsserter asserter;
+
+	private static final String emailExpression = "^[\\w\\.-]+@([\\w\\-]+\\.)+[A-Z]{2,4}$";
 
 	public StringManipulator(NullPointerAsserter asserter) {
 		this.asserter = asserter;
@@ -34,4 +39,14 @@ public class StringManipulator {
 		return "null";
 	}
 
+	public static boolean isEmailValid(CharSequence email) {
+		boolean isValid = false;
+
+		Pattern pattern = Pattern.compile(emailExpression, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(email);
+		if (matcher.matches()) {
+			isValid = true;
+		}
+		return isValid;
+	}
 }
