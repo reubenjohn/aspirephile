@@ -1,6 +1,0 @@
-[submodule "ui"]
-	path = ui
-	url = https://github.com/reubenjohn/aspirephile-ui.git
-[submodule "parse"]
-	path = parse
-	url = https://github.com/reubenjohn/aspirephile-parse.git
